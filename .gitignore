@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.vscode/
+.env
+datasets/*
+!datasets/README.md
+checkpoints/*
+!checkpoints/.gitkeep
+results/*
+!results/.gitkeep
+*.pth
+*.pt
+*.ckpt
+*.log
+.DS_Store
+wandb/
+

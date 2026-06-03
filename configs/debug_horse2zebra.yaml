@@ -1,0 +1,25 @@
+dataset_name: horse2zebra
+dataroot: datasets/horse2zebra
+model_type: baseline
+n_blocks: 9
+image_size: 256
+load_size: 286
+batch_size: 1
+num_workers: 2
+lr: 0.0002
+beta1: 0.5
+beta2: 0.999
+epochs: 1
+decay_start_epoch: 1
+decay_epochs: 1
+lambda_cycle: 10
+lambda_identity: 5
+use_identity: true
+use_cycle: true
+pool_size: 50
+save_epoch_freq: 1
+sample_freq: 100
+device: cuda
+direction: AtoB
+seed: 42
+
