@@ -1,7 +1,7 @@
 dataset_name: horse2zebra
 dataroot: datasets/horse2zebra
-model_type: lightweight
-n_blocks: 6
+model_type: dwconv9
+n_blocks: 9
 image_size: 256
 load_size: 286
 batch_size: 1
@@ -21,10 +21,10 @@ use_cycle: true
 pool_size: 50
 save_epoch_freq: 10
 sample_freq: 500
+log_freq: 100
 device: cuda
 direction: AtoB
 seed: 42
 cudnn_benchmark: true
 cudnn_deterministic: false
 use_amp: false
-log_freq: 100

@@ -1,4 +1,5 @@
 import json
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -8,11 +9,14 @@ from PIL import Image
 IMG_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 
-def image_paths(directory):
-    return sorted([p for p in Path(directory).iterdir() if p.suffix.lower() in IMG_EXTENSIONS])
+def image_paths(directory, max_images=None):
+    paths = sorted([p for p in Path(directory).iterdir() if p.suffix.lower() in IMG_EXTENSIONS])
+    if max_images is not None:
+        paths = paths[:max_images]
+    return paths
 
 
-def compute_fid_kid(real_dir, fake_dir):
+def compute_fid_kid(real_dir, fake_dir, max_images=None):
     """Compute FID and KID with clean-fid."""
     try:
         from cleanfid import fid
@@ -21,18 +25,19 @@ def compute_fid_kid(real_dir, fake_dir):
 
     real_dir = str(Path(real_dir))
     fake_dir = str(Path(fake_dir))
-    return {
-        "FID": float(fid.compute_fid(real_dir, fake_dir)),
-        "KID": float(fid.compute_kid(real_dir, fake_dir)),
-    }
+    if max_images is not None:
+        warnings.warn("clean-fid directory API uses all images; max_images is ignored for FID/KID.")
+    return {"FID": round(float(fid.compute_fid(real_dir, fake_dir)), 6), "KID": round(float(fid.compute_kid(real_dir, fake_dir)), 6)}
 
 
-def _load_pair_tensors(input_dir, fake_dir, image_size=256):
+def _load_pair_tensors(input_dir, fake_dir, image_size=256, max_images=None):
     import torch
     from torchvision import transforms
 
-    input_paths = image_paths(input_dir)
-    fake_paths = image_paths(fake_dir)
+    input_paths = image_paths(input_dir, max_images=max_images)
+    fake_paths = image_paths(fake_dir, max_images=max_images)
+    if len(input_paths) != len(fake_paths):
+        warnings.warn(f"input_dir has {len(input_paths)} images but fake_dir has {len(fake_paths)}; using the minimum count.")
     by_name = {p.name: p for p in fake_paths}
     pairs = [(p, by_name[p.name]) for p in input_paths if p.name in by_name]
     if not pairs:
@@ -44,7 +49,7 @@ def _load_pair_tensors(input_dir, fake_dir, image_size=256):
         yield real, fake
 
 
-def compute_ssim_lpips(input_dir, fake_dir):
+def compute_ssim_lpips(input_dir, fake_dir, max_images=None):
     """Compute sorted-pair SSIM and LPIPS. Returns null metrics if input_dir is missing."""
     if input_dir is None:
         return {"SSIM": None, "LPIPS": None}
@@ -58,7 +63,7 @@ def compute_ssim_lpips(input_dir, fake_dir):
     ssim_values = []
     lpips_values = []
     with torch.no_grad():
-        for real, fake in _load_pair_tensors(input_dir, fake_dir):
+        for real, fake in _load_pair_tensors(input_dir, fake_dir, max_images=max_images):
             real_np = np.transpose(real.squeeze(0).numpy(), (1, 2, 0))
             fake_np = np.transpose(fake.squeeze(0).numpy(), (1, 2, 0))
             ssim_values.append(structural_similarity(real_np, fake_np, channel_axis=2, data_range=1.0))
@@ -69,14 +74,15 @@ def compute_ssim_lpips(input_dir, fake_dir):
     if not ssim_values:
         return {"SSIM": None, "LPIPS": None}
     return {
-        "SSIM": float(np.mean(ssim_values)),
-        "LPIPS": float(np.mean(lpips_values)),
+        "SSIM": round(float(np.mean(ssim_values)), 6),
+        "LPIPS": round(float(np.mean(lpips_values)), 6),
     }
 
 
 def compute_cmmd(real_dir, fake_dir):
     """Reserved CMMD interface. Returns null unless a project-specific implementation is added."""
     _ = real_dir, fake_dir
+    print("CMMD is not implemented in this project; returning null.")
     return {"CMMD": None}
 
 
@@ -91,4 +97,3 @@ def save_metrics(metrics, output_path):
     csv_path = output_path.with_suffix(".csv")
     pd.DataFrame([metrics]).to_csv(csv_path, index=False)
     return output_path, csv_path
-

@@ -5,7 +5,10 @@ n_blocks: 9
 image_size: 256
 load_size: 286
 batch_size: 1
-num_workers: 2
+num_workers: 4
+pin_memory: true
+persistent_workers: true
+prefetch_factor: 4
 lr: 0.0002
 beta1: 0.5
 beta2: 0.999
@@ -22,4 +25,7 @@ sample_freq: 100
 device: cuda
 direction: AtoB
 seed: 42
-
+cudnn_benchmark: true
+cudnn_deterministic: false
+use_amp: false
+log_freq: 20

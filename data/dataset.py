@@ -7,11 +7,14 @@ from torch.utils.data import Dataset
 from .transforms import get_transform
 
 
-IMG_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp"}
+IMG_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 
 def list_images(directory):
-    return sorted([p for p in Path(directory).iterdir() if p.suffix.lower() in IMG_EXTENSIONS])
+    directory = Path(directory)
+    if not directory.exists():
+        raise FileNotFoundError(f"Image directory not found: {directory}")
+    return sorted([p for p in directory.iterdir() if p.suffix.lower() in IMG_EXTENSIONS])
 
 
 class UnpairedImageDataset(Dataset):
@@ -49,4 +52,3 @@ class UnpairedImageDataset(Dataset):
             "A_path": str(path_A),
             "B_path": str(path_B),
         }
-

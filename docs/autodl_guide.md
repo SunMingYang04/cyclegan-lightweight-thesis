@@ -7,6 +7,7 @@ cd cyclegan-lightweight-thesis
 conda create -n cyclegan_thesis python=3.9 -y
 conda activate cyclegan_thesis
 pip install -r requirements.txt
+chmod +x scripts/*.sh
 ```
 
 Place datasets under `datasets/horse2zebra` and `datasets/apple2orange`.
@@ -17,11 +18,19 @@ Debug run:
 bash scripts/train_debug.sh
 ```
 
+Profile before long training:
+
+```bash
+python profile_model.py --model_type baseline --device cuda
+python profile_model.py --model_type lightweight --device cuda
+```
+
 Full runs:
 
 ```bash
 bash scripts/train_baseline_horse2zebra.sh
 bash scripts/train_lightweight_horse2zebra.sh
+bash scripts/train_dwconv9_horse2zebra.sh
 ```
 
 Resume:
@@ -30,3 +39,4 @@ Resume:
 python train.py --config configs/baseline_horse2zebra.yaml --name baseline_horse2zebra --resume checkpoints/baseline_horse2zebra/latest.pth
 ```
 
+Formal thesis runs should keep `batch_size=1` and `use_amp=false`. The default configs are optimized for RTX 4080 SUPER with `num_workers=8`, `pin_memory=true`, `persistent_workers=true`, and `prefetch_factor=4`.
